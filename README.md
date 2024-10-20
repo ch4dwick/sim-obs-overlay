@@ -1,36 +1,26 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# SIM OBS Overlay
 
-## Getting Started
+After seeing existing Flight Sim overlays reliant on XPUIPC, I realized I could implement a more modern solution. Since the end goal here was basically to use it as a BrowserPlugin frame in OBS Studio there was no need to rely on something so elaborate since X-Plane already has a system for me to query flight details.
 
-First, run the development server:
+## Requirements
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+- Latest installation of NodeJs
+- X-Plane 12
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## TODO
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- config dashboard (beneoverlay for reference)
+- save a config file
+- X-Plane Rest API interface
+- widgets
+- Actual output
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Limitations
 
-## Learn More
+- Relies on the user to install NodeJs. I'll try to find a better way to distrubte this for the end-user in a simpler way.
+- only supports X-Plane 12.
+- my HTML skills.
 
-To learn more about Next.js, take a look at the following resources:
+# Privacy Notice
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+This app does not collect any personal data - at least not yet. :)
