@@ -12,6 +12,7 @@ After seeing existing Flight Sim overlays reliant on XPUIPC, I realized I could 
 - config dashboard (beneoverlay for reference)
 - save a config file
 - X-Plane Rest API interface
+- using WebSocket for more real-time checking
 - widgets
 - Actual output
 

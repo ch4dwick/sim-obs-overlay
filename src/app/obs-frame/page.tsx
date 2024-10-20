@@ -2,12 +2,13 @@
 
 import Typography from '@mui/material/Typography';
 import jp from 'jsonpath';
-import { SetStateAction, useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 // import WebSocket from 'ws';
 // import { Flight } from '@/models/Flight';
 import { DataRefWsRequest } from '@/models/DataRefWsRequest';
 import { DataRefsResponse } from '@/models/DataRefsResponse';
+import Button from '@mui/material/Button';
 
 // const rootUrl = 'http://localhost:3000/datarefs.json';
 const rootUrl = 'https://4367-182-18-225-92.ngrok-free.app/api/v1/datarefs';
@@ -22,27 +23,19 @@ export default function Page() {
     //     transAlt: 8000
     // });
 
-    // sim/cockpit2/gauges/indicators/altitude_ft_pilot
-    // const currAltId = '2711343677248';
-    const [currAltId, setCurrAltId] = useState<number>();
-    // sim/cockpit2/gauges/indicators/airspeed_kts_pilot
-    // const pilotAirspeedId = '2711343676240';
-    const [pilotAirspeedId, setPilotAirspeedId] = useState<number>();
-    // sim/cockpit2/gauges/indicators/true_airspeed_kts_pilot
-    // const pilotTrueAirspeedId = '2711343678256';
-    const [pilotTrueAirspeedId, setPilotTrueAirspeedId] = useState<number>();
-    // sim/cockpit2/gauges/indicators/heading_AHARS_deg_mag_pilot
-    // const compassHeadingDegId = '2711343679600';
-    const [compassHeadingDegId, setCompassHeadingDegId] = useState<number>();
-    // sim/cockpit2/gauges/indicators/compass_heading_deg_mag
-    // const compassMagneticHeadingId = '2711343675736';
-    const [compassMagneticHeadingId, setCompassMagneticHeadingId] = useState<number>();
+    const [currAltId, setCurrAltId] = useState<number>(0);
+    const [pilotAirspeedId, setPilotAirspeedId] = useState<number>(0);
+    const [pilotTrueAirspeedId, setPilotTrueAirspeedId] = useState<number>(0);
+    const [compassHeadingDegId, setCompassHeadingDegId] = useState<number>(0);
+    const [compassMagneticHeadingId, setCompassMagneticHeadingId] = useState<number>(0);
 
+    // TODO: Move this to an object.
     const [dataRefs, setDataRefs] = useState<DataRefsResponse>({ data: [] });
     const [currAltFt, setCurrAltFt] = useState<number>(0);
     const [currAltMt, setCurrAltMt] = useState<number>(0);
     const [currSpd, setCurrSpd] = useState<number>(0);
     const [currHdg, setCurrHdg] = useState<number>(0);
+    const [currMagHdg, setCurrMagHdg] = useState<number>(0);
 
     // Warning: The response is huge.
     const getDataRefs = async () => {
@@ -57,10 +50,20 @@ export default function Page() {
         let dataRef = [];
         if (dataRefs.data.length > 0) {
             dataRef = jp.query(dataRefs, `$.data[?(@. name == '${name}')]`);
-            console.log(`dataref ${name} ${JSON.stringify(dataRef[0].id)}`);
+            // console.log(`dataref ${name} ${JSON.stringify(dataRef[0].id)}`);
         }
         return (dataRefs.data.length > 0) ? dataRef[0].id : 0;
     }, [dataRefs]);
+
+    const getUpdatedDataRefWs = useCallback((source: object, id: number): number => {
+        console.log(`getUpdatedDataRefWs(${id})`);
+        let dataRef = [0];
+        if (source !== undefined) {
+            dataRef = jp.query(source, `$.${id}`);
+            // console.log(`dataref ${id} ${JSON.stringify(dataRef[0])}`);
+        }
+        return dataRef[0];
+    }, []);
 
     const subscribeToDataRefs = useCallback(async () => {
         ws.addEventListener('open', () => {
@@ -70,18 +73,35 @@ export default function Page() {
                 type: 'dataref_subscribe_values',
                 params: {
                     datarefs: [
-                        { id: currAltId },
-                        { id: pilotAirspeedId },
-                        { id: pilotTrueAirspeedId },
-                        { id: compassHeadingDegId },
-                        { id: compassMagneticHeadingId }
+                        { id: 2004938583872 },
+                        { id: 2004938582864 },
+                        // { id: pilotTrueAirspeedId },
+                        { id: 2004938586224 },
+                        { id: 2004938582360 }
                     ]
                 }
             }
             console.log(`Final WS Payload: ${JSON.stringify(payload)}`)
             ws.send(JSON.stringify(payload));
         });
-    }, [compassHeadingDegId, compassMagneticHeadingId, currAltId, pilotAirspeedId, pilotTrueAirspeedId])
+        ws.addEventListener("message", (event) => {
+            // console.log("Message from server ", JSON.parse(event.data));
+            const json = JSON.parse(event.data);
+            if ("result" === json.type) {
+                console.log(`Subscribed values ${json.success}!`);
+            }
+            if ("dataref_update_values" === json.type) {
+                setCurrAltFt(getUpdatedDataRefWs(json.data, 2004938583872));
+                // setCurrAltFt(getUpdatedDataRefWs(json.data, currAltId));
+                setCurrSpd(getUpdatedDataRefWs(json.data, 2004938582864));
+                // setCurrSpd(getUpdatedDataRefWs(json.data, pilotAirspeedId));
+                setCurrHdg(getUpdatedDataRefWs(json.data, 2004938586224));
+                // setCurrHdg(getUpdatedDataRefWs(json.data, compassHeadingDegId));
+                setCurrMagHdg(getUpdatedDataRefWs(json.data, 2004938582360));
+                // setCurrMagHdg(getUpdatedDataRefWs(json.data, compassMagneticHeadingId));
+            }
+        });
+    }, [getUpdatedDataRefWs])
 
     const getDataRefVal = async (id: number | undefined) => {
         console.log(`DataRefId (${id})`);
@@ -109,6 +129,36 @@ export default function Page() {
         return getDataRefVal(compassHeadingDegId);
     }
 
+    const getMagHeading = async () => {
+        console.log('getMagHeading()');
+        return getDataRefVal(compassMagneticHeadingId);
+    }
+
+    const connectWs = () => {
+        console.log('connectWs()');
+        ws.addEventListener('open', () => {
+            console.log('Connected to server');
+            const payload: DataRefWsRequest = {
+                req_id: 4,
+                type: 'dataref_subscribe_values',
+                params: {
+                    datarefs: [
+                        { id: 2004938583872 },
+                        { id: 2004938582864 },
+                        // { id: pilotTrueAirspeedId },
+                        { id: 2004938586224 },
+                        { id: 2004938582360 }
+                    ]
+                }
+            }
+            console.log(`Final WS Payload: ${JSON.stringify(payload)}`)
+            ws.send(JSON.stringify(payload));
+        });
+        ws.addEventListener("message", (event) => {
+            console.log("Message from server ", event.data);
+        });
+    }
+
     useEffect(() => {
         // Initialize DataRefs
         const initRefs = async () => { await getDataRefs() };
@@ -129,7 +179,8 @@ export default function Page() {
             setCurrAltMt(mt);
         });
         getAirspeed().then(res => setCurrSpd(res.data.toLocaleString('en-us', { minimumFractionDigits: 2 })))
-        getHeading().then(res => setCurrHdg(res.data))
+        getHeading().then(res => setCurrHdg(res.data));
+        getMagHeading().then(res => setCurrMagHdg(res.data));
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [getDataRefSessionId])
 
@@ -141,18 +192,30 @@ export default function Page() {
         <div>
             <h1>Frame</h1>
             <Typography variant="body1">
-                Altitude {Math.round(currAltFt).toLocaleString('en-us', { minimumFractionDigits: 0 })}ft / {Math.round(currAltMt).toLocaleString('en-us', { minimumFractionDigits: 0 })}m
+                Altitude: {currAltFt}
+                {/* Altitude {Math.round(currAltFt).toLocaleString('en-us', { minimumFractionDigits: 0 })}ft / {Math.round(currAltMt).toLocaleString('en-us', { minimumFractionDigits: 0 })}m */}
             </Typography>
             <Typography variant="body1">
-                Airspeed {Math.round(currSpd).toLocaleString('en-us', { minimumFractionDigits: 0 })}kts
+                Airspeed {currSpd}kts
+                {/* Airspeed {Math.round(currSpd).toLocaleString('en-us', { minimumFractionDigits: 0 })}deg */}
             </Typography>
             <Typography variant="body1">
                 Heading {Math.round(currHdg).toLocaleString('en-us', { minimumFractionDigits: 0 })}deg
+            </Typography>
+            <Typography variant="body1">
+                Magnetic North Heading {Math.round(currMagHdg).toLocaleString('en-us', { minimumFractionDigits: 0 })}deg
             </Typography>
             {/* <Typography variant="body1">
                 DataRefs {currAltId} {pilotAirspeedId}
                 {JSON.stringify(dataRefs)}
             </Typography> */}
+            <Button
+                variant="contained"
+                // disabled={currAltId != undefined
+                //     && pilotAirspeedId !== undefined
+                //     && compassHeadingDegId !== undefined
+                //     && compassMagneticHeadingId !== undefined}
+                onClick={connectWs}>Get DataRefs</Button>
         </div>
     );
 }
