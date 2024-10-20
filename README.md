@@ -20,6 +20,7 @@ After seeing existing Flight Sim overlays reliant on XPUIPC, I realized I could 
 - Relies on the user to install NodeJs. I'll try to find a better way to distrubte this for the end-user in a simpler way.
 - only supports X-Plane 12.
 - my HTML skills.
+- X-Plane REST & WebSocket API still does not have all the data that is available in the SDK.
 
 # Privacy Notice
 
