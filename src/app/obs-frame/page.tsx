@@ -1,7 +1,6 @@
 'use client'
 
 import Typography from '@mui/material/Typography';
-import jp from 'jsonpath';
 import { useCallback, useEffect, useState } from 'react';
 
 // import WebSocket from 'ws';
@@ -9,10 +8,11 @@ import { useCallback, useEffect, useState } from 'react';
 import { DataRefWsRequest } from '@/models/DataRefWsRequest';
 import { DataRefsResponse } from '@/models/DataRefsResponse';
 import Button from '@mui/material/Button';
+import { JSONPath } from 'jsonpath-plus';
 
 // const rootUrl = 'http://localhost:3000/datarefs.json';
-const rootUrl = 'https://4367-182-18-225-92.ngrok-free.app/api/v1/datarefs';
-const ws = new WebSocket('wss://4367-182-18-225-92.ngrok-free.app/api/v1');
+const rootUrl = 'https://6594-182-18-225-92.ngrok-free.app/api/v1/datarefs';
+const ws = new WebSocket('wss://6594-182-18-225-92.ngrok-free.app/api/v1');
 
 export default function Page() {
     // const [flight] = useState<Flight>({
@@ -49,8 +49,8 @@ export default function Page() {
         console.log(`getDataRefSessionId(${name})`);
         let dataRef = [];
         if (dataRefs.data.length > 0) {
-            dataRef = jp.query(dataRefs, `$.data[?(@. name == '${name}')]`);
-            // console.log(`dataref ${name} ${JSON.stringify(dataRef[0].id)}`);
+            dataRef = JSONPath({ path: `$.data[?(@. name == '${name}')]`, json: dataRefs });
+            console.log(`dataref ${name} ${JSON.stringify(dataRef[0].id)}`);
         }
         return (dataRefs.data.length > 0) ? dataRef[0].id : 0;
     }, [dataRefs]);
@@ -59,8 +59,8 @@ export default function Page() {
         console.log(`getUpdatedDataRefWs(${id})`);
         let dataRef = [0];
         if (source !== undefined) {
-            dataRef = jp.query(source, `$.${id}`);
-            // console.log(`dataref ${id} ${JSON.stringify(dataRef[0])}`);
+            dataRef = JSONPath({ path: `$.${id}`, json: source });
+            console.log(`dataref ${id} ${JSON.stringify(dataRef[0])}`);
         }
         return dataRef[0];
     }, []);
@@ -73,11 +73,11 @@ export default function Page() {
                 type: 'dataref_subscribe_values',
                 params: {
                     datarefs: [
-                        { id: 2004938583872 },
-                        { id: 2004938582864 },
+                        { id: 1608290516016 },
+                        { id: 1608290515008 },
                         // { id: pilotTrueAirspeedId },
-                        { id: 2004938586224 },
-                        { id: 2004938582360 }
+                        { id: 1608290518368 },
+                        { id: 1608290514504 }
                     ]
                 }
             }
@@ -91,13 +91,13 @@ export default function Page() {
                 console.log(`Subscribed values ${json.success}!`);
             }
             if ("dataref_update_values" === json.type) {
-                setCurrAltFt(getUpdatedDataRefWs(json.data, 2004938583872));
+                setCurrAltFt(getUpdatedDataRefWs(json.data, 1608290516016));
                 // setCurrAltFt(getUpdatedDataRefWs(json.data, currAltId));
-                setCurrSpd(getUpdatedDataRefWs(json.data, 2004938582864));
+                setCurrSpd(getUpdatedDataRefWs(json.data, 1608290515008));
                 // setCurrSpd(getUpdatedDataRefWs(json.data, pilotAirspeedId));
-                setCurrHdg(getUpdatedDataRefWs(json.data, 2004938586224));
+                setCurrHdg(getUpdatedDataRefWs(json.data, 1608290518368));
                 // setCurrHdg(getUpdatedDataRefWs(json.data, compassHeadingDegId));
-                setCurrMagHdg(getUpdatedDataRefWs(json.data, 2004938582360));
+                setCurrMagHdg(getUpdatedDataRefWs(json.data, 1608290514504));
                 // setCurrMagHdg(getUpdatedDataRefWs(json.data, compassMagneticHeadingId));
             }
         });

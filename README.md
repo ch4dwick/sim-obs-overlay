@@ -26,3 +26,5 @@ After seeing existing Flight Sim overlays reliant on XPUIPC, I realized I could 
 # Privacy Notice
 
 This app does not collect any personal data - at least not yet. :)
+
+X-Plane DataRef variables don't contain any personal data and the IDs generate every game load.
