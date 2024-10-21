@@ -3,41 +3,33 @@
 import Typography from '@mui/material/Typography';
 import { useCallback, useEffect, useState } from 'react';
 
-// import WebSocket from 'ws';
-// import { Flight } from '@/models/Flight';
 import { DataRefWsRequest } from '@/models/DataRefWsRequest';
 import { DataRefsResponse } from '@/models/DataRefsResponse';
 import Button from '@mui/material/Button';
 import { JSONPath } from 'jsonpath-plus';
+import { FlightTelemetry } from '@/models/FlightTelemetry';
 
 // const rootUrl = 'http://localhost:3000/datarefs.json';
 const rootUrl = 'https://6594-182-18-225-92.ngrok-free.app/api/v1/datarefs';
 const ws = new WebSocket('wss://6594-182-18-225-92.ngrok-free.app/api/v1');
 
 export default function Page() {
+    const [ft, setFt] = useState<FlightTelemetry>({
+        currentAltId: 0,
+        currentAltFt: 0,
+        currentAltMt: 0,
+        pilotAirspeedId: 0,
+        currentSpd: 0,
+        pilotTrueAirspeedId: 0,
+        compassHeadingDegId: 0,
+        currentHdg: 0,
+        compassMagneticHeadingId: 0,
+        currentMagHdg: 0,
+        distanceToTODId: 0,
+        distanceAfterTODId: 0
+    });
 
-    // sim/cockpit2/gauges/indicators/altitude_ft_pilot
-    const [currAltId, setCurrAltId] = useState<number>(0);
-    // sim/cockpit2/gauges/indicators/airspeed_kts_pilot
-    const [pilotAirspeedId, setPilotAirspeedId] = useState<number>(0);
-    // sim/cockpit2/gauges/indicators/true_airspeed_kts_pilot
-    const [pilotTrueAirspeedId, setPilotTrueAirspeedId] = useState<number>(0);
-    // sim/cockpit2/gauges/indicators/heading_AHARS_deg_mag_pilot
-    const [compassHeadingDegId, setCompassHeadingDegId] = useState<number>(0);
-    // sim/cockpit2/gauges/indicators/compass_heading_deg_mag
-    const [compassMagneticHeadingId, setCompassMagneticHeadingId] = useState<number>(0);
-    // sim/cockpit2/radios/indicators/fms_distance_to_tod_pilot
-    const [distanceToTODId, setDistanceToTODId] = useState<number>(0);
-    // sim/cockpit2/radios/indicators/fms_tod_before_distance_pilot
-    const [distanceAfterTODId, setDistanceAfterTODId] = useState<number>(0);
-
-    // TODO: Move this to an object.
     const [dataRefs, setDataRefs] = useState<DataRefsResponse>({ data: [] });
-    const [currAltFt, setCurrAltFt] = useState<number>(0);
-    const [currAltMt, setCurrAltMt] = useState<number>(0);
-    const [currSpd, setCurrSpd] = useState<number>(0);
-    const [currHdg, setCurrHdg] = useState<number>(0);
-    const [currMagHdg, setCurrMagHdg] = useState<number>(0);
 
     // Warning: The response is huge.
     const getDataRefs = async () => {
@@ -57,11 +49,11 @@ export default function Page() {
         return (dataRefs.data.length > 0) ? dataRef[0].id : 0;
     }, [dataRefs]);
 
-    const getUpdatedDataRefWs = (source: object, id: number, fallBackVal: number): number => {
+    const getUpdatedDataRefWs = (source: object, id: number): number => {
         console.log(`getUpdatedDataRefWs(): ${id}`);
         const dataRef = JSONPath({ path: `$.${id}`, json: source });
-        console.log(`${id} ${fallBackVal} ${dataRef[0]}`);
-        return dataRef[0] ?? fallBackVal;
+        console.log(`${id} ${dataRef[0]}`);
+        return dataRef[0] ?? 0;
     };
 
     const subscribeToDataRefs = useCallback(async () => {
@@ -96,7 +88,7 @@ export default function Page() {
         //         setCurrMagHdg(getUpdatedDataRefWs(json.data, compassMagneticHeadingId));
         //     }
         // });
-    }, [compassHeadingDegId, compassMagneticHeadingId, currAltId, getUpdatedDataRefWs, pilotAirspeedId])
+    }, [ft, getUpdatedDataRefWs])
 
 
     const connectWs = () => {
@@ -112,11 +104,11 @@ export default function Page() {
                 type: 'dataref_subscribe_values',
                 params: {
                     datarefs: [
-                        { id: currAltId },
-                        { id: pilotAirspeedId },
-                        // { id: pilotTrueAirspeedId },
-                        { id: compassHeadingDegId },
-                        { id: compassMagneticHeadingId }
+                        { id: ft.currentAltId },
+                        { id: ft.pilotAirspeedId },
+                        { id: ft.pilotTrueAirspeedId },
+                        { id: ft.compassHeadingDegId },
+                        { id: ft.compassMagneticHeadingId }
                     ]
                 }
             }
@@ -129,10 +121,13 @@ export default function Page() {
                     console.log(`Response status ${json.success}!`);
                 }
                 if ("dataref_update_values" === json.type) {
-                    setCurrAltFt(getUpdatedDataRefWs(json.data, currAltId, currAltFt));
-                    setCurrSpd(getUpdatedDataRefWs(json.data, pilotAirspeedId, currSpd));
-                    setCurrHdg(getUpdatedDataRefWs(json.data, compassHeadingDegId, currHdg));
-                    setCurrMagHdg(getUpdatedDataRefWs(json.data, compassMagneticHeadingId, currMagHdg));
+                    setFt({
+                        ...ft,
+                        currentAltFt: getUpdatedDataRefWs(json.data, ft.currentAltId),
+                        currentSpd: getUpdatedDataRefWs(json.data, ft.pilotAirspeedId),
+                        currentHdg: getUpdatedDataRefWs(json.data, ft.compassHeadingDegId),
+                        currentMagHdg: getUpdatedDataRefWs(json.data, ft.compassMagneticHeadingId)
+                    });
                 }
             });
         }
@@ -167,10 +162,9 @@ export default function Page() {
 
     const areDataRefIdsReady = (): boolean => {
         return ws.readyState != ws.OPEN
-            && currAltId === 0
-            && pilotAirspeedId === 0
-            && compassHeadingDegId === 0
-            && compassMagneticHeadingId === 0
+            && ft.currentAltId === 0
+            && ft.pilotAirspeedId === 0
+            && ft.compassHeadingDegId === 0
     }
 
     useEffect(() => {
@@ -180,54 +174,46 @@ export default function Page() {
     }, []);
 
     useEffect(() => {
-        setCurrAltId(getDataRefSessionId('sim/cockpit2/gauges/indicators/altitude_ft_pilot'))
-        setPilotAirspeedId(getDataRefSessionId('sim/cockpit2/gauges/indicators/airspeed_kts_pilot'));
-        setPilotTrueAirspeedId(getDataRefSessionId('sim/cockpit2/gauges/indicators/true_airspeed_kts_pilot'));
-        setCompassHeadingDegId(getDataRefSessionId('sim/cockpit2/gauges/indicators/heading_AHARS_deg_mag_pilot'));
-        setCompassMagneticHeadingId(getDataRefSessionId('sim/cockpit2/gauges/indicators/compass_heading_deg_mag'));
+        setFt({
+            ...ft,
+            currentAltId: getDataRefSessionId('sim/cockpit2/gauges/indicators/altitude_ft_pilot'),
+            pilotAirspeedId: getDataRefSessionId('sim/cockpit2/gauges/indicators/airspeed_kts_pilot'),
+            pilotTrueAirspeedId: getDataRefSessionId('sim/cockpit2/gauges/indicators/true_airspeed_kts_pilot'),
+            compassHeadingDegId: getDataRefSessionId('sim/cockpit2/gauges/indicators/heading_AHARS_deg_mag_pilot'),
+            compassMagneticHeadingId: getDataRefSessionId('sim/cockpit2/gauges/indicators/compass_heading_deg_mag')
+        });
 
-        // getAltitude().then(res => {
-        //     const ft: number = res.data;
-        //     const mt = ft * 0.3048;
-        //     setCurrAltFt(ft);
-        //     setCurrAltMt(mt);
-        // });
-
-        // getAirspeed().then(res => setCurrSpd(res.data.toLocaleString('en-us', { minimumFractionDigits: 2 })))
-        // getHeading().then(res => setCurrHdg(res.data));
-        // getMagHeading().then(res => setCurrMagHdg(res.data));
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [getDataRefSessionId])
 
     useEffect(() => {
         subscribeToDataRefs();
-    }, [subscribeToDataRefs, compassHeadingDegId, compassMagneticHeadingId, currAltId, pilotAirspeedId]);
+    }, [subscribeToDataRefs, ft]);
 
     return (
         <div>
             <h1>Frame</h1>
             <Typography variant="body1">
-                Test Altitude: {currAltFt}<br />
-                Altitude {Math.round(currAltFt).toLocaleString('en-us', { minimumFractionDigits: 0 })}ft /
-                {Math.round(currAltFt * 0.3048).toLocaleString('en-us', { minimumFractionDigits: 0 })}m
+                Test Altitude: {ft.currentAltFt}ft<br />
+                Altitude {Math.round(ft.currentAltFt).toLocaleString('en-us', { minimumFractionDigits: 0 })}ft /
+                {Math.round(ft.currentAltFt * 0.3048).toLocaleString('en-us', { minimumFractionDigits: 0 })}m
             </Typography>
             <Typography variant="body1">
-                Test Airspeed {currSpd}kts<br />
-                Airspeed {Math.round(currSpd).toLocaleString('en-us', { minimumFractionDigits: 0 })}deg
+                Test Airspeed {ft.currentSpd}kts<br />
+                Airspeed {Math.round(ft.currentSpd).toLocaleString('en-us', { minimumFractionDigits: 0 })}kts
             </Typography>
             <Typography variant="body1">
-                Test Heading {currHdg}kts <br />
-                Heading {Math.round(currHdg).toLocaleString('en-us', { minimumFractionDigits: 0 })}deg
+                Test Heading {ft.currentHdg}&#176; <br />
+                Heading {Math.round(ft.currentHdg).toLocaleString('en-us', { minimumFractionDigits: 0 })}&#176;
             </Typography>
             <Typography variant="body1">
-                Test Magnetic Heading {currMagHdg}kts <br />
-                Magnetic North Heading {Math.round(currMagHdg).toLocaleString('en-us', { minimumFractionDigits: 0 })}deg
+                Test Magnetic Heading {ft.currentMagHdg}&#176; <br />
+                Magnetic North Heading {Math.round(ft.currentMagHdg).toLocaleString('en-us', { minimumFractionDigits: 0 })}&#176;
             </Typography>
             <Typography variant="body1">
-                DataRefs {currAltId},
-                {pilotAirspeedId},
-                {compassHeadingDegId},
-                {compassMagneticHeadingId}
+                DataRefs {ft.currentAltId},
+                {ft.pilotAirspeedId},
+                {ft.compassHeadingDegId},
+                {ft.compassMagneticHeadingId}
                 {/* {JSON.stringify(dataRefs)} */}
             </Typography>
             <Button
