@@ -18,4 +18,8 @@ export interface FlightTelemetry {
     distanceToTODId: number;
     // sim/cockpit2/radios/indicators/fms_tod_before_distance_pilot
     distanceAfterTODId: number;
+
+    // laminar/autopilot/ap_on
+    autopilotStatusId: number;
+    autopilotStatus: number;
 }
