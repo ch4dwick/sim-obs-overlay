@@ -5,16 +5,13 @@ After seeing existing Flight Sim overlays reliant on XPUIPC, I realized I could 
 ## Requirements
 
 - Latest installation of NodeJs
-- X-Plane 12
+- X-Plane 12 is running and in an active flight. There will be no DataRefs if it's not in a flight.
 
 ## TODO
 
 - config dashboard (beneoverlay for reference)
 - save a config file
-- X-Plane Rest API interface
-- using WebSocket for more real-time checking
-- widgets
-- Actual output
+- widget refinement
 
 ## Limitations
 
@@ -22,6 +19,7 @@ After seeing existing Flight Sim overlays reliant on XPUIPC, I realized I could 
 - only supports X-Plane 12.
 - my HTML skills.
 - X-Plane REST & WebSocket API still does not have all the data that is available in the SDK.
+- unsubscribing using params.datarefs: all doesn't work in a single call. To stop completely, you need to press Stop until all the values stop updating.
 
 # Privacy Notice
 

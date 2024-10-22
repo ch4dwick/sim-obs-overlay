@@ -2,7 +2,6 @@ export interface FlightTelemetry {
     // sim/cockpit2/gauges/indicators/altitude_ft_pilot
     currentAltId: number;
     currentAltFt: number;
-    currentAltMt: number;
     // sim/cockpit2/gauges/indicators/airspeed_kts_pilot
     pilotAirspeedId: number;
     currentSpd: number;
@@ -19,7 +18,8 @@ export interface FlightTelemetry {
     // sim/cockpit2/radios/indicators/fms_tod_before_distance_pilot
     distanceAfterTODId: number;
 
+    // TODO: Removing this for now because each plane uses a different dataRef variable to set this.
     // laminar/autopilot/ap_on
-    autopilotStatusId: number;
-    autopilotStatus: number;
+    // autopilotStatusId: number;
+    // autopilotStatus: number;
 }
