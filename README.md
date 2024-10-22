@@ -12,8 +12,9 @@ After seeing existing Flight Sim overlays reliant on XPUIPC, I realized I could 
 
 - config dashboard (beneoverlay for reference)
 - save a config file
+- Dashboard currently on hold. Prioritizing the widget.
 - widget refinement
-
+- 
 How to use:
 - Install latest version of [NodeJs](https://nodejs.org/en)
 - build the source
@@ -24,8 +25,7 @@ npm install
 ```sh
 npm run build
 ```
-- In VLC, add a browser source or edit an existing one. Use this project's local url to load the URL.
-
+- In VLC, add a browser source or edit an existing one. Use this project's local url to load the URL. It's currently http://localhost:3000/obs-frame
 
 ## Limitations
 
