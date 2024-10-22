@@ -41,3 +41,8 @@ npm run build
 This app does not collect any personal data - at least not yet. :)
 
 X-Plane DataRef variables don't contain any personal data and the IDs generate every game load.
+
+# References
+- X-Plane DataRefs https://developer.x-plane.com/datarefs/
+- X-Plane Rest & WebSocket API docs. https://developer.x-plane.com/article/x-plane-web-api/
+- NextJs https://nextjs.org/
